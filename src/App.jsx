@@ -1,8 +1,8 @@
 import './App.css'
-import { TvChart } from './trading-view/TvChart'
+import { TradingViewComponent } from './trading-view-component/TradingViewComponent'
 
 function App() {
-  return <TvChart></TvChart>
+  return <TradingViewComponent></TradingViewComponent>
 }
 
 export default App

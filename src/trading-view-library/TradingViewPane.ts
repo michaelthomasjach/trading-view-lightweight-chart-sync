@@ -1,4 +1,4 @@
-import { createChart, ChartOptions, DeepPartial, IChartApi, ISeriesApi, Time, AreaData, WhitespaceData, AreaSeriesOptions, AreaStyleOptions, SeriesOptionsCommon } from "lightweight-charts";
+import { createChart, ChartOptions, DeepPartial, IChartApi, ISeriesApi, Time, AreaData, WhitespaceData, AreaSeriesOptions, AreaStyleOptions, SeriesOptionsCommon, LogicalRange } from "lightweight-charts";
 
 export type ChartConfig = {
     container: string | HTMLElement;
@@ -8,13 +8,10 @@ export type ChartConfig = {
 export type SeriesConfig = {
     seriesOptions?: DeepPartial<AreaStyleOptions & SeriesOptionsCommon>;
     seriesData?: { time: string; value: number }[];
-    initialBoundaries?: { 
-        from?: number;
-        to?: number;
-    }
+    visibleRange?: LogicalRange
 };
 
-export class CustomTradingViewChart {
+export class TradingViewPane {
     private seriesValue: SeriesConfig["seriesData"] = [];
     private chartElement: IChartApi | undefined = undefined;
     private seriesElement: ISeriesApi<"Area", Time, AreaData<Time> | WhitespaceData<Time>, AreaSeriesOptions, DeepPartial<AreaStyleOptions & SeriesOptionsCommon>> | undefined;
@@ -37,8 +34,8 @@ export class CustomTradingViewChart {
         // STEP 3
         // Initial boundaries of displayed elements on the chart
         this.seriesValue.length && this.chartElement.timeScale().setVisibleLogicalRange({
-            from: seriesConfig?.initialBoundaries?.from || 0,
-            to: seriesConfig?.initialBoundaries?.to || this.seriesValue.length - 1
+            from: seriesConfig?.visibleRange?.from || 0,
+            to: seriesConfig?.visibleRange?.to || this.seriesValue.length - 1
         });
     }
 
