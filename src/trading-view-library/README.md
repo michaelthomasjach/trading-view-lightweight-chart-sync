@@ -61,7 +61,8 @@ on top of that, you can synchronize multiple panes together by using the followi
 ```js
 new TradingView([
     chartInstance1,
-    chartInstance2
+    chartInstance2,
+    chartInstance3
 ])
 ```
 
