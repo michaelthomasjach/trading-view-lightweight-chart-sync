@@ -48,6 +48,13 @@ export type ShowLabelsDefinition = {
     }[];
 };
 
+export type ShowMarkersDefinition = {
+    markersContainer: HTMLDivElement;
+    markers: {
+        markerElement: HTMLElement
+        point: SeriesDataPoint
+    }[];
+}
 
 export enum ChartType {
     AREA = "AREA",
@@ -65,13 +72,15 @@ export class TradingViewPane {
     private seriesElement: ISeriesApi<"Area" | "Line", Time, AreaData<Time> | LineData<Time> | WhitespaceData<Time>, AreaSeriesOptions | LineSeriesOptions, DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>> | undefined;
     private labelsAppendDom: any[] = [];
     private paneId = crypto.getRandomValues(new Uint32Array(1))[0];
+    private seriesConfig: SeriesConfig;
 
     constructor(
         chartConfig: ChartConfig, 
         seriesConfig: SeriesConfig, 
         options?: Options
     ) {
-
+        this.seriesConfig = seriesConfig;
+        
         const opts = {
             chartType: ChartType.AREA,
             showLabels: false,
@@ -128,11 +137,11 @@ export class TradingViewPane {
 
         // STEP 5: Afficher les markers
         if (opts.showMarkers) {
-            const {labelsContainer, labels} = this.showMarkers(
+            const {markersContainer, markers} = this.showMarkers(
                 chartConfig.container,
                 seriesConfig.seriesData
             );
-            this.syncMarkers(labelsContainer, labels);
+            this.syncMarkers(markersContainer, markers);
         }
 
       
@@ -246,14 +255,12 @@ export class TradingViewPane {
         });  
     };
 
-    
     private showLabels = (
         container: ChartConfig["container"],
         values: SeriesConfig["seriesData"]
     ): ShowLabelsDefinition => {
         if (!container) throw new Error("Container must be defined to be able to show labels !");
 
-        // STEP 4: Créer un conteneur pour les labels
         const labelsContainer: HTMLDivElement = document.createElement("div");
         labelsContainer.className = "labels-container";
         labelsContainer.style.position = "absolute";
@@ -303,6 +310,124 @@ export class TradingViewPane {
     };
 
 
+    private syncMarkers = (markersContainer: HTMLDivElement, markers: ShowMarkersDefinition["markers"]) => {
+        const elementsArray = Array.from(markers.map(marker => marker.markerElement));
+        if (elementsArray.length > 0) {
+            (elementsArray as HTMLElement[]).forEach(e => {
+               e.remove();
+            });
+        }  
+
+        
+        this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+            const elementsArray = Array.from(document.getElementsByClassName(`chart-marker-${this.paneId}`));
+            if (elementsArray.length > 0) {
+                (elementsArray as HTMLElement[]).forEach(e => {
+                   e.remove();
+                });
+            }  
+
+            markers?.forEach((marker) => {
+                if (!marker?.markerElement || !marker?.point) throw new Error("Point or MarkerElement is not defined !");
+                const {point, markerElement} = marker;
+                const coordinate = this.series!.priceToCoordinate(point.value);
+                const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
+
+                if (coordinate !== null && timeCoordinate !== null) {
+                    const markerElement = this.createMarker(marker?.point, timeCoordinate, coordinate);
+                    this.labelsAppendDom.push(markersContainer.appendChild(markerElement));
+
+                    const left = parseInt(markerElement.style.left.split('px')[0]);
+                    const top = parseInt(markerElement.style.top.split('px')[0]);
+                    const labelHeight = markerElement.clientHeight;
+                    const labelWidth = markerElement.clientWidth;
+
+                    markerElement.style.left = `${left }px`; // Centrer la valeur horizontalement
+                    markerElement.style.top = `${top}px`; // Positionner au-dessus du point
+                } else {
+
+                }
+            });
+        });  
+    }
+
+    private showMarkers = (
+        container: ChartConfig["container"],
+        values: SeriesConfig["seriesData"]
+    ): ShowMarkersDefinition => {
+        if (!container) throw new Error("Container must be defined to be able to show markers !");
+
+        const markersContainer: HTMLDivElement = document.createElement("div");
+        markersContainer.className = "markers-container";
+        markersContainer.style.position = "absolute";
+        markersContainer.style.top = "0";
+        markersContainer.style.left = "0";
+        markersContainer.style.width = "100%";
+        markersContainer.style.height = "100%";
+        markersContainer.style.zIndex = "1";
+        
+        if (typeof container === "string") {
+            const containerElement = document.getElementById(container);
+            containerElement?.appendChild(markersContainer);
+        } else {
+            container.appendChild(markersContainer);
+        }
+
+
+        const markers: ShowMarkersDefinition["markers"] = [];
+        // Display initial position of labels
+        values?.forEach((point) => {
+            const coordinate = this.series!.priceToCoordinate(point.value);
+            const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
+
+            if (coordinate !== null && timeCoordinate !== null) {
+                const markerElement = this.createMarker(point, timeCoordinate, coordinate)
+
+                const markerHeight = markerElement.clientHeight;
+                const markerWidth = markerElement.clientWidth;
+
+                const top = parseInt(markerElement.style.top.split("px")[0]);
+                const left = parseInt(markerElement.style.left.split("px")[0]);
+
+                markerElement.style.left = `${left - markerWidth / 2}px`; // Centrer la valeur horizontalement
+                markerElement.style.top = `${top - markerHeight / 2}px`; // Positionner au-dessus du point
+                
+                markersContainer.appendChild(markerElement);
+                
+                markers.push({
+                    markerElement,
+                    point
+                })
+
+            }
+        });
+
+        return {
+            markersContainer,
+            markers
+        };
+    }
+
+    private createMarker = (point: SeriesDataPoint, timeCoordinate: Coordinate, coordinate: Coordinate) => {
+        const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
+
+        const markerElement = document.createElement('div');
+        const uniqueId = `chart-marker-${uniqueNumber}`;
+        const markerSize = 8;
+        markerElement.className = `chart-marker-${this.paneId}`;
+        markerElement.id = uniqueId;
+        markerElement.style.position = 'absolute';
+        markerElement.style.background = this.seriesConfig.seriesOptions?.color ? this.seriesConfig.seriesOptions?.color : 'red';
+        markerElement.style.border = '2px solid white';
+        markerElement.style.width = `${markerSize}px`; // Centrer la valeur horizontalement
+        markerElement.style.height = `${markerSize}px`; // Centrer la valeur horizontalement
+        markerElement.style.borderRadius = `${50}%`; // Centrer la valeur horizontalement
+
+        markerElement.style.left = `${timeCoordinate - markerSize / 2 -1}px`; // Centrer la valeur horizontalement
+        markerElement.style.top = `${coordinate - markerSize / 2 -1}px`; // Positionner au-dessus du point
+        
+        return markerElement;
+    }
 
 
 

@@ -92,7 +92,8 @@ export const TradingViewComponent = ({ className }: Props) => {
             },
             {
                 chartType: ChartType.STEPLINE,
-                showLabels: true 
+                showLabels: true,
+                showMarkers: true 
             }
             
         );
@@ -117,7 +118,8 @@ export const TradingViewComponent = ({ className }: Props) => {
             }
         }, {
             chartType: ChartType.STEPLINE,
-            showLabels: true 
+            showLabels: true,
+            showMarkers: true 
         });
 
         new TradingView([
