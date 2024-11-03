@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {ColorType, createChart, LogicalRange, Time} from 'lightweight-charts';
 import { TradingViewPane } from '../trading-view-library/TradingViewPane';
 import { TradingView } from '../trading-view-library/TradingView';
+import { Utils } from '../Utils';
 
 interface ITvChartState {
 }
@@ -20,18 +21,47 @@ export const TradingViewComponent = ({ className }: Props) => {
     const chartRef3 = useRef<HTMLDivElement>(null);
 
 
+    const defaultOptionsChart = {
+        layout: {
+            background: { type: ColorType.Solid, color: 'white' },
+            textColor: 'black',
+        },
+        grid: {
+            vertLines: {
+                color: 'rgba(0, 0, 0, 0)', // Transparence totale (invisible)
+            },
+            horzLines: {
+                color: 'rgba(0, 0, 0, 0)', // Transparence totale (invisible)
+            },
+        },
+        timeScale: {
+            visible: false, // Masquer complètement l'axe X
+            borderColor: 'rgba(0, 0, 0, 0)', // Rendre la bordure du timeScale complètement transparente
+        },
+        priceScale: {
+            borderColor: 'rgba(0, 0, 0, 0)', // Rendre la bordure de l'axe Y transparente
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(0, 0, 0, 0)', // Masquer la bordure de l'axe Y à droite
+        },
+        leftPriceScale: {
+            borderColor: 'rgba(0, 0, 0, 0)', // Masquer la bordure de l'axe Y à gauche (si utilisée)
+        },
+    }
+
+
     useEffect(() => {
         //////////////////////////
         // Création du graphique 1
-        if (!chartRef1.current || !chartRef2.current || !chartRef3.current) return;
-        const optionsChart1 = {
-            layout: {
-                background: { type: ColorType.Solid, color: 'white' },
-                textColor: 'black',
-            },
+        if (!chartRef1.current || 
+            !chartRef2.current || 
+            !chartRef3.current
+        ) return;
+
+        const optionsChart1 = Utils.mergeDeep(defaultOptionsChart, {
             width: chartRef1.current.clientWidth,
             height: chartRef1.current.clientHeight || 300, // Définissez la hauteur désirée ici
-        };
+        });
         const chartInstance1 = new TradingViewPane({
             container: chartRef1.current,
             chartOptions: optionsChart1,
@@ -45,19 +75,15 @@ export const TradingViewComponent = ({ className }: Props) => {
         });
 
 
-        const optionsChart2 = {
-            layout: {
-                background: { type: ColorType.Solid, color: 'white' },
-                textColor: 'black',
-            },
+        const optionsChart2 = Utils.mergeDeep(defaultOptionsChart, {
             width: chartRef2.current.clientWidth,
             height: chartRef2.current.clientHeight || 300, // Définissez la hauteur désirée ici
-        };
+        });
         const chartInstance2 = new TradingViewPane({
             container: chartRef2.current,
             chartOptions: optionsChart2,
         }, {
-            seriesData: jsonData2,
+            seriesData: jsonData3,
             seriesOptions: {
                 lineColor: '#2962FF',
                 topColor: '#2962FF',
@@ -66,14 +92,13 @@ export const TradingViewComponent = ({ className }: Props) => {
         });
 
 
-        const optionsChart3 = {
-            layout: {
-                background: { type: ColorType.Solid, color: 'white' },
-                textColor: 'black',
-            },
+        const optionsChart3 = Utils.mergeDeep(defaultOptionsChart, {
             width: chartRef3.current.clientWidth,
             height: chartRef3.current.clientHeight || 300, // Définissez la hauteur désirée ici
-        };
+            timeScale: {
+                visible: true, // Affiche l'axe X
+            },
+        });
         const chartInstance3 = new TradingViewPane({
             container: chartRef3.current,
             chartOptions: optionsChart3,
@@ -102,9 +127,9 @@ export const TradingViewComponent = ({ className }: Props) => {
 
     return (
         <>
-            <div className="chart1" ref={chartRef1}></div>
-            <div className="chart2" ref={chartRef2}></div>
-            <div className="chart3" ref={chartRef3}></div>
+            <div className="chart chart1" ref={chartRef1}></div>
+            <div className="chart chart2" ref={chartRef2}></div>
+            <div className="chart chart3" ref={chartRef3}></div>
         </>          
     )
 };

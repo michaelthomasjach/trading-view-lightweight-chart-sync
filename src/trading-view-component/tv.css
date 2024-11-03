@@ -1,3 +1,18 @@
+.chart tr {
+  position: relative;
+  width: 100%;
+}
+.chart tr::before {
+  position: absolute;
+  display: block;
+  left: 0;
+  bottom: 0;
+  content: "";
+  height: 1px;
+  width: 100%;
+  border-bottom: 1px solid #000; /* Ajoute une bordure noire de 2px */
+  z-index: 2;
+}
 .chart1 {
   height: 60%;
 }
@@ -6,4 +21,8 @@
 }
 .chart3 {
   height: 20%;
+}
+
+.chart-container .tv-lightweight-charts .price-axis {
+  border: none !important; /* Supprime toute bordure */
 }
