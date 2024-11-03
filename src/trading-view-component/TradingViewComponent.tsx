@@ -4,7 +4,7 @@ import jsonData2 from './serie2.json';
 import jsonData3 from './serie3.json';
 import React, { useEffect, useRef, useState } from 'react';
 import {ColorType, createChart, LogicalRange, Time} from 'lightweight-charts';
-import { TradingViewPane } from '../trading-view-library/TradingViewPane';
+import { ChartType, TradingViewPane } from '../trading-view-library/TradingViewPane';
 import { TradingView } from '../trading-view-library/TradingView';
 import { Utils } from '../Utils';
 
@@ -89,7 +89,9 @@ export const TradingViewComponent = ({ className }: Props) => {
                 topColor: '#2962FF',
                 bottomColor: 'rgba(41, 98, 255, 0.28)',
             }
-        });
+        },
+        ChartType.STEPLINE
+    );
 
 
         const optionsChart3 = Utils.mergeDeep(defaultOptionsChart, {

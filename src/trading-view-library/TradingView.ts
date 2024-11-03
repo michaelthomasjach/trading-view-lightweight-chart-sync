@@ -47,6 +47,7 @@ export class TradingView {
     
     //////////////////////////
     // Syncronisation des crosshair
+    // https://tradingview.github.io/lightweight-charts/tutorials/how_to/set-crosshair-position
     private syncCrosshair = (sourceChart: TradingViewPane, targetChart: TradingViewPane) => {
         sourceChart.chart.subscribeCrosshairMove((param) => {
             let dataPoint: {time: Time; value: number} | undefined = undefined; 
