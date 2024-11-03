@@ -16,23 +16,14 @@
   border-bottom: 1px solid #000; /* Ajoute une bordure noire de 2px */
   z-index: 2;
 }
-.chart1 {
-  height: 60%;
-}
-.chart2 {
-  height: 20%;
-}
-.chart3 {
-  height: 20%;
-}
 
 .chart-container .tv-lightweight-charts .price-axis {
   border: none !important; /* Supprime toute bordure */
 }
 
-
-
-
+#tv-attr-logo {
+  display: none;
+}
 
 .labels-container {
   position: absolute;

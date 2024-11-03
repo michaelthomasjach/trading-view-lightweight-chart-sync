@@ -220,10 +220,12 @@ export class TradingViewPane {
                e.remove();
             });
         }  
-
+        
+        this.chart?.subscribeClick(e => {
+            console.log("clic")
+        })
         
         this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
-
             const elementsArray = Array.from(document.getElementsByClassName(`chart-label-${this.paneId}`));
             if (elementsArray.length > 0) {
                 (elementsArray as HTMLElement[]).forEach(e => {

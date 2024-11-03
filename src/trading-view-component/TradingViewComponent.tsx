@@ -1,4 +1,5 @@
-import './tv.css';
+import './trading-view-component.css';
+import './trading-view-global.css';
 import jsonData1 from './serie1.json';
 import jsonData2 from './serie2.json';
 import jsonData3 from './serie3.json';
@@ -20,11 +21,15 @@ export const TradingViewComponent = ({ className }: Props) => {
     const chartRef2 = useRef<HTMLDivElement>(null);
     const chartRef3 = useRef<HTMLDivElement>(null);
 
-
+/** ***************************
+ * Changer la largeur de l'axe Y
+ * https://stackoverflow.com/questions/71901106/a-way-to-set-pricescale-width-in-lightweight-charts
+ */
+    const axisColor = "#c8c8c8";
     const defaultOptionsChart = {
         layout: {
             background: { type: ColorType.Solid, color: 'white' },
-            textColor: 'black',
+            textColor: axisColor,
         },
         grid: {
             vertLines: {
@@ -35,18 +40,33 @@ export const TradingViewComponent = ({ className }: Props) => {
             },
         },
         timeScale: {
+            textColor: axisColor, // Couleur de la police de l'axe Y
             visible: false, // Masquer complètement l'axe X
             borderColor: 'rgba(0, 0, 0, 0)', // Rendre la bordure du timeScale complètement transparente
+            tickMarkFormatter: (time, tickMarkType) => {
+                console.log('time', time)
+
+                const date = new Date(time); // Convertir le temps Unix en date JavaScript
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Les mois commencent à 0
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`; // Format "dd/mm/yyyy"
+            },
         },
         priceScale: {
+            textColor: axisColor, // Couleur de la police de l'axe Y
             borderColor: 'rgba(0, 0, 0, 0)', // Rendre la bordure de l'axe Y transparente
         },
         rightPriceScale: {
+            textColor: axisColor, // Couleur de la police de l'axe Y
             borderColor: 'rgba(0, 0, 0, 0)', // Masquer la bordure de l'axe Y à droite
         },
         leftPriceScale: {
+            textColor: axisColor, // Couleur de la police de l'axe Y
             borderColor: 'rgba(0, 0, 0, 0)', // Masquer la bordure de l'axe Y à gauche (si utilisée)
         },
+        
+        
     }
 
 
