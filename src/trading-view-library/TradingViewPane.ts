@@ -14,7 +14,8 @@ import {
     LineStyleOptions,
     LineSeriesOptions,
     LineData,
-    LineType  } from "lightweight-charts";
+    LineType,  
+    Coordinate} from "lightweight-charts";
 
 export type ChartConfig = {
     container: string | HTMLElement;
@@ -147,23 +148,17 @@ export class TradingViewPane {
                 const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
                 if (coordinate !== null && timeCoordinate !== null) {
-                    const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
-
-                    const labelElement = document.createElement('div');
-                    const uniqueId = `chart-label-${uniqueNumber}`;
-                    labelElement.className = `chart-label-${this.paneId}`;
-                    labelElement.id = uniqueId;
-                    labelElement.style.position = 'absolute';
-                    labelElement.style.background = '#2962FF';
-                    labelElement.style.color = 'white';
-                    labelElement.style.padding = '4px';
-                    labelElement.style.borderRadius = '4px';
-                    labelElement.style.fontSize = '12px';
-
-                    labelElement.style.left = `${timeCoordinate - 20}px`; // Centrer la valeur horizontalement
-                    labelElement.style.top = `${coordinate - 0}px`; // Positionner au-dessus du point
-                    labelElement.innerHTML = `${point.value}`;
+                    const labelElement = this.createLabel(label?.point, timeCoordinate, coordinate);
                     this.labelsAppendDom.push(labelsContainer.appendChild(labelElement));
+
+                    const left = parseInt(labelElement.style.left.split('px')[0]);
+                    const top = parseInt(labelElement.style.top.split('px')[0]);
+                    const labelHeight = labelElement.clientHeight;
+                    const labelWidth = labelElement.clientWidth;
+
+                    console.log('labelWidth', left)
+                    labelElement.style.left = `${left - labelWidth/2}px`; // Centrer la valeur horizontalement
+                    labelElement.style.top = `${top - labelHeight - 10}px`; // Positionner au-dessus du point
                 } else {
 
                 }
@@ -173,6 +168,40 @@ export class TradingViewPane {
 
 
 
+    private createLabel = (point: SeriesDataPoint, timeCoordinate: Coordinate, coordinate: Coordinate) => {
+        const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
+
+        const labelElement = document.createElement('div');
+        const uniqueId = `chart-label-${uniqueNumber}`;
+        labelElement.className = `chart-label-${this.paneId}`;
+        labelElement.id = uniqueId;
+        labelElement.style.position = 'absolute';
+        labelElement.style.background = 'transparent';
+        labelElement.style.color = 'white';
+        labelElement.style.fontSize = '12px';
+        labelElement.style.maxWidth = '50px';
+        labelElement.style.textAlign = 'center';
+        labelElement.style.lineHeight = '1.2'; // Ajuste l'espacement entre les lignes
+        
+        //labelElement.style.webkitTextStroke = '1px #000'; // Contour noir de 2 pixels pour créer l'effet bien prononcé
+        const width = 1;
+        labelElement.style.textShadow = `
+        -${width}px -${width}px 0 #000,
+        ${width}px -${width}px 0 #000,
+        -${width}px ${width}px 0 #000,
+        ${width}px ${width}px 0 #000,
+        0px -${width + 1}px 0 #000,
+        0px ${width + 1}px 0 #000,
+        -${width + 1}px 0px 0 #000,
+        ${width + 1}px 0px 0 #000
+    `;
+        
+        labelElement.innerHTML = `${point.value}`;
+        labelElement.style.left = `${timeCoordinate}px`; // Centrer la valeur horizontalement
+        labelElement.style.top = `${coordinate}px`; // Positionner au-dessus du point
+        
+        return labelElement;
+    }
 
 
     private showLabels = (
@@ -206,25 +235,16 @@ export class TradingViewPane {
             const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
             if (coordinate !== null && timeCoordinate !== null) {
-                const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
-
-                const labelElement = document.createElement('div');
-                const uniqueId = `chart-label-${uniqueNumber}`;
-                labelElement.className = `chart-label-${this.paneId}`;
-                labelElement.id = uniqueId;
-                labelElement.style.position = 'absolute';
-                labelElement.style.left = `${timeCoordinate}px`; // Centrer la valeur horizontalement
-                labelElement.style.top = `${coordinate - 0}px`; // Positionner au-dessus du point
-                labelElement.style.background = '#2962FF';
-                labelElement.style.color = 'white';
-                labelElement.style.padding = '4px';
-                labelElement.style.borderRadius = '4px';
-                labelElement.style.fontSize = '12px';
-                labelElement.innerHTML = `Valeur: ${point.value}`;
+                const labelElement = this.createLabel(point, timeCoordinate, coordinate)
                 labelsContainer.appendChild(labelElement);
 
-                const element = document.getElementById(uniqueId);
-                if (!element) throw new Error("Label not found on DOM");
+                
+
+                const labelHeight = labelElement.clientHeight;
+                const labelWidth = labelElement.clientWidth;
+                console.log('labelWidth', labelWidth)
+                labelElement.style.left = `${labelElement.style.left + labelWidth}px`; // Centrer la valeur horizontalement
+                labelElement.style.top = `${labelElement.style.top + labelHeight}px`; // Positionner au-dessus du point
                 labels.push({
                     labelElement,
                     point

@@ -83,7 +83,7 @@ export const TradingViewComponent = ({ className }: Props) => {
                 container: chartRef2.current,
                 chartOptions: optionsChart2,
             }, {
-                seriesData: jsonData3,
+                seriesData: jsonData2,
                 seriesOptions: {
                     lineColor: '#2962FF',
                     topColor: '#2962FF',
@@ -91,7 +91,8 @@ export const TradingViewComponent = ({ className }: Props) => {
                 }
             },
             {
-                chartType: ChartType.STEPLINE
+                chartType: ChartType.STEPLINE,
+                showLabels: true 
             }
             
         );
@@ -115,6 +116,7 @@ export const TradingViewComponent = ({ className }: Props) => {
                 bottomColor: 'rgba(41, 98, 255, 0.28)',
             }
         }, {
+            chartType: ChartType.STEPLINE,
             showLabels: true 
         });
 
