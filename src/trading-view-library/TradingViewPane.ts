@@ -30,11 +30,13 @@ export type SeriesDataPoint = {
 export type Options = {
     chartType?: ChartType;
     showLabels?: boolean;
+    showMarkers?: boolean;
 };
 
 export type SeriesConfig = {
     seriesOptions?: DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>;
     seriesData?: SeriesDataPoint[];
+    seriesTitle?: string;
     visibleRange?: LogicalRange
 };
 
@@ -73,6 +75,7 @@ export class TradingViewPane {
         const opts = {
             chartType: ChartType.AREA,
             showLabels: false,
+            showMarkers: false,
             ...options
         }    
         this.seriesValue = seriesConfig?.seriesData || [];
@@ -109,10 +112,12 @@ export class TradingViewPane {
             to: seriesConfig?.visibleRange?.to || this.seriesValue.length - 1
         });
 
+        // STEP 5: Afficher le titre
+        if (seriesConfig.seriesTitle) {
+            this.createTitle(chartConfig.container, seriesConfig.seriesTitle)
+        }
 
-
-        // STEP 5: Afficher les labels de valeur
-
+        // STEP 6: Afficher les labels de valeur
         if (opts.showLabels) {
             const {labelsContainer, labels} = this.showLabels(
                 chartConfig.container,
@@ -120,53 +125,49 @@ export class TradingViewPane {
             );
             this.syncLabels(labelsContainer, labels);
         }
+
+        // STEP 5: Afficher les markers
+        if (opts.showMarkers) {
+            const {labelsContainer, labels} = this.showMarkers(
+                chartConfig.container,
+                seriesConfig.seriesData
+            );
+            this.syncMarkers(labelsContainer, labels);
+        }
+
+      
     }
 
 
-    private syncLabels = (labelsContainer: HTMLDivElement, labels: ShowLabelsDefinition["labels"]) => {
-        const elementsArray = Array.from(labels.map(label => label.labelElement));
-        if (elementsArray.length > 0) {
-            (elementsArray as HTMLElement[]).forEach(e => {
-               e.remove();
-            });
-        }  
 
+    private createTitle = (container: ChartConfig["container"], title: string) => {
+        if (!container) throw new Error("Container must be defined to be able to show labels !");
+
+        const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
+
+        const labelElement = document.createElement('div');
+        const uniqueId = `chart-title-${uniqueNumber}`;
+        labelElement.className = `chart-title-${this.paneId}`;
+        labelElement.id = uniqueId;
+        labelElement.style.position = 'absolute';
+        labelElement.style.background = 'white';
+        labelElement.style.color = 'black';
+        labelElement.style.fontSize = '14px';
+        labelElement.style.textAlign = 'center';
+        labelElement.style.lineHeight = '1.2'; // Ajuste l'espacement entre les lignes
+        labelElement.style.left = `${10}px`; // Centrer la valeur horizontalement
+        labelElement.style.top = `${10}px`; // Positionner au-dessus du point
+        labelElement.style.zIndex = `9999`; // Positionner au-dessus du point
+        labelElement.innerHTML = `${title}`;
         
-        this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
-
-            const elementsArray = Array.from(document.getElementsByClassName(`chart-label-${this.paneId}`));
-            if (elementsArray.length > 0) {
-                (elementsArray as HTMLElement[]).forEach(e => {
-                   e.remove();
-                });
-            }  
-
-            labels?.forEach((label) => {
-                if (!label?.labelElement || !label?.point) throw new Error("Point or LabelElement is not defined !");
-                const {point, labelElement} = label;
-                const coordinate = this.series!.priceToCoordinate(point.value);
-                const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
-
-                if (coordinate !== null && timeCoordinate !== null) {
-                    const labelElement = this.createLabel(label?.point, timeCoordinate, coordinate);
-                    this.labelsAppendDom.push(labelsContainer.appendChild(labelElement));
-
-                    const left = parseInt(labelElement.style.left.split('px')[0]);
-                    const top = parseInt(labelElement.style.top.split('px')[0]);
-                    const labelHeight = labelElement.clientHeight;
-                    const labelWidth = labelElement.clientWidth;
-
-                    console.log('labelWidth', left)
-                    labelElement.style.left = `${left - labelWidth/2}px`; // Centrer la valeur horizontalement
-                    labelElement.style.top = `${top - labelHeight - 10}px`; // Positionner au-dessus du point
-                } else {
-
-                }
-            });
-        });  
-    };
-
-
+        if (typeof container === "string") {
+            const containerElement = document.getElementById(container);
+            containerElement?.appendChild(labelElement);
+        } else {
+            container.appendChild(labelElement);
+        }
+        return labelElement;
+    }
 
     private createLabel = (point: SeriesDataPoint, timeCoordinate: Coordinate, coordinate: Coordinate) => {
         const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
@@ -203,7 +204,49 @@ export class TradingViewPane {
         return labelElement;
     }
 
+    private syncLabels = (labelsContainer: HTMLDivElement, labels: ShowLabelsDefinition["labels"]) => {
+        const elementsArray = Array.from(labels.map(label => label.labelElement));
+        if (elementsArray.length > 0) {
+            (elementsArray as HTMLElement[]).forEach(e => {
+               e.remove();
+            });
+        }  
 
+        
+        this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+
+            const elementsArray = Array.from(document.getElementsByClassName(`chart-label-${this.paneId}`));
+            if (elementsArray.length > 0) {
+                (elementsArray as HTMLElement[]).forEach(e => {
+                   e.remove();
+                });
+            }  
+
+            labels?.forEach((label) => {
+                if (!label?.labelElement || !label?.point) throw new Error("Point or LabelElement is not defined !");
+                const {point, labelElement} = label;
+                const coordinate = this.series!.priceToCoordinate(point.value);
+                const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
+
+                if (coordinate !== null && timeCoordinate !== null) {
+                    const labelElement = this.createLabel(label?.point, timeCoordinate, coordinate);
+                    this.labelsAppendDom.push(labelsContainer.appendChild(labelElement));
+
+                    const left = parseInt(labelElement.style.left.split('px')[0]);
+                    const top = parseInt(labelElement.style.top.split('px')[0]);
+                    const labelHeight = labelElement.clientHeight;
+                    const labelWidth = labelElement.clientWidth;
+
+                    labelElement.style.left = `${left - labelWidth/2}px`; // Centrer la valeur horizontalement
+                    labelElement.style.top = `${top - labelHeight - 10}px`; // Positionner au-dessus du point
+                } else {
+
+                }
+            });
+        });  
+    };
+
+    
     private showLabels = (
         container: ChartConfig["container"],
         values: SeriesConfig["seriesData"]
@@ -242,7 +285,7 @@ export class TradingViewPane {
 
                 const labelHeight = labelElement.clientHeight;
                 const labelWidth = labelElement.clientWidth;
-                console.log('labelWidth', labelWidth)
+
                 labelElement.style.left = `${labelElement.style.left + labelWidth}px`; // Centrer la valeur horizontalement
                 labelElement.style.top = `${labelElement.style.top + labelHeight}px`; // Positionner au-dessus du point
                 labels.push({
@@ -258,6 +301,13 @@ export class TradingViewPane {
             labels
         };
     };
+
+
+
+
+
+
+
 
     get chart(): IChartApi {
         return this.chartElement as IChartApi;

@@ -83,11 +83,11 @@ export const TradingViewComponent = ({ className }: Props) => {
                 container: chartRef2.current,
                 chartOptions: optionsChart2,
             }, {
+                seriesTitle: "Total revenue",
                 seriesData: jsonData2,
                 seriesOptions: {
-                    lineColor: '#2962FF',
-                    topColor: '#2962FF',
-                    bottomColor: 'rgba(41, 98, 255, 0.28)',
+                    color: '#46a474',
+                    lineWidth: 2,
                 }
             },
             {
@@ -109,11 +109,11 @@ export const TradingViewComponent = ({ className }: Props) => {
             container: chartRef3.current,
             chartOptions: optionsChart3,
         }, {
+            seriesTitle: "Net income",
             seriesData: jsonData3,
             seriesOptions: {
-                lineColor: '#2962FF',
-                topColor: '#2962FF',
-                bottomColor: 'rgba(41, 98, 255, 0.28)',
+                color: '#f2d13a',
+                lineWidth: 2,
             }
         }, {
             chartType: ChartType.STEPLINE,
