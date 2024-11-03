@@ -1,3 +1,6 @@
+.chart {
+  position: relative;
+}
 .chart tr {
   position: relative;
   width: 100%;
@@ -25,4 +28,24 @@
 
 .chart-container .tv-lightweight-charts .price-axis {
   border: none !important; /* Supprime toute bordure */
+}
+
+
+
+
+
+.labels-container {
+  position: absolute;
+  pointer-events: none; /* Empêcher l'interaction avec les étiquettes */
+}
+
+.chart-label {
+  position: absolute;
+  background: #2962FF; /* Couleur de fond */
+  color: white; /* Couleur du texte */
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
 }

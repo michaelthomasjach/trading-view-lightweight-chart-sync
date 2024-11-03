@@ -80,18 +80,21 @@ export const TradingViewComponent = ({ className }: Props) => {
             height: chartRef2.current.clientHeight || 300, // Définissez la hauteur désirée ici
         });
         const chartInstance2 = new TradingViewPane({
-            container: chartRef2.current,
-            chartOptions: optionsChart2,
-        }, {
-            seriesData: jsonData3,
-            seriesOptions: {
-                lineColor: '#2962FF',
-                topColor: '#2962FF',
-                bottomColor: 'rgba(41, 98, 255, 0.28)',
+                container: chartRef2.current,
+                chartOptions: optionsChart2,
+            }, {
+                seriesData: jsonData3,
+                seriesOptions: {
+                    lineColor: '#2962FF',
+                    topColor: '#2962FF',
+                    bottomColor: 'rgba(41, 98, 255, 0.28)',
+                }
+            },
+            {
+                chartType: ChartType.STEPLINE
             }
-        },
-        ChartType.STEPLINE
-    );
+            
+        );
 
 
         const optionsChart3 = Utils.mergeDeep(defaultOptionsChart, {
@@ -111,6 +114,8 @@ export const TradingViewComponent = ({ className }: Props) => {
                 topColor: '#2962FF',
                 bottomColor: 'rgba(41, 98, 255, 0.28)',
             }
+        }, {
+            showLabels: true 
         });
 
         new TradingView([

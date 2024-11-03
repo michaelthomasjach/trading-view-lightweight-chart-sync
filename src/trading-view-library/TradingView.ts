@@ -41,7 +41,15 @@ export class TradingView {
                 this.isSynchronizing = false;  // Libérer le verrou après la mise à jour
             }
         });
+
+    
+        
     };
+
+
+    private syncLabels = () => {
+    
+    }
 
 
     
