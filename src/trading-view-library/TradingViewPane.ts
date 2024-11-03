@@ -159,7 +159,7 @@ export class TradingViewPane {
         labelElement.className = `chart-title-${this.paneId}`;
         labelElement.id = uniqueId;
         labelElement.style.position = 'absolute';
-        labelElement.style.background = 'white';
+        labelElement.style.background = 'rgba(255, 255, 255, 0.7)';
         labelElement.style.color = 'black';
         labelElement.style.fontSize = '14px';
         labelElement.style.textAlign = 'center';
