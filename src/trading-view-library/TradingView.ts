@@ -49,7 +49,6 @@ export class TradingView {
     // https://tradingview.github.io/lightweight-charts/tutorials/how_to/set-crosshair-position
     private syncCrosshair = (sourceChart: TradingViewPane, targetChart: TradingViewPane) => {
         sourceChart.chart.subscribeCrosshairMove((param) => {
-            console.log('param', param.logical)
             let dataPoint: {time: Time; value: number} | undefined = undefined; 
             param.seriesData.forEach((value, key) => {
                 dataPoint = {
@@ -61,11 +60,10 @@ export class TradingView {
             if (!dataPoint && param?.logical) {
                 // Récupérer la valeur la plus proche en termes de temps
                 const coordinate = targetChart.chart.timeScale().logicalToCoordinate(param.logical);
-
                 if (!coordinate) throw new Error("Unable to get coordinate with logical informations");
+
                 const time = sourceChart.chart.timeScale().coordinateToTime(coordinate);
-                console.log('time', time)
-                if (!time) throw new Error("Unable to get Time from coordinates");
+                if (!time) return;
                 targetChart.series && targetChart.chart.setCrosshairPosition(0, time, targetChart.series);
                 return;
             }

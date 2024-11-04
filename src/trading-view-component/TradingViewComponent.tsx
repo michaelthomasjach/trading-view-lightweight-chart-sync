@@ -44,8 +44,6 @@ export const TradingViewComponent = ({ className }: Props) => {
             visible: false, // Masquer complètement l'axe X
             borderColor: 'rgba(0, 0, 0, 0)', // Rendre la bordure du timeScale complètement transparente
             tickMarkFormatter: (time, tickMarkType) => {
-                console.log('time', time)
-
                 const date = new Date(time); // Convertir le temps Unix en date JavaScript
                 const day = date.getDate().toString().padStart(2, '0');
                 const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Les mois commencent à 0
