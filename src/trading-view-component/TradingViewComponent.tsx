@@ -1,13 +1,15 @@
 import './trading-view-component.css';
 import './trading-view-global.css';
 import jsonData1 from './serie1.json';
+import jsonDataSma1 from './serie1_sma.json';
 import jsonData2 from './serie2.json';
 import jsonData3 from './serie3.json';
 import React, { useEffect, useRef, useState } from 'react';
-import {ColorType, createChart, LogicalRange, Time, WhitespaceData} from 'lightweight-charts';
+import {ColorType, createChart, LineData, LogicalRange, Time, WhitespaceData} from 'lightweight-charts';
 import { ChartType, TradingViewPane } from '../trading-view-library/TradingViewPane';
 import { TradingView } from '../trading-view-library/TradingView';
 import { Utils } from '../Utils';
+import { Indicators } from '../trading-view-library/Indicators';
 
 interface ITvChartState {
 }
@@ -21,10 +23,11 @@ export const TradingViewComponent = ({ className }: Props) => {
     const chartRef2 = useRef<HTMLDivElement>(null);
     const chartRef3 = useRef<HTMLDivElement>(null);
 
-/** ***************************
- * Changer la largeur de l'axe Y
- * https://stackoverflow.com/questions/71901106/a-way-to-set-pricescale-width-in-lightweight-charts
- */
+
+    /** ***************************
+     * Changer la largeur de l'axe Y
+     * https://stackoverflow.com/questions/71901106/a-way-to-set-pricescale-width-in-lightweight-charts
+     */
     const axisColor = "#c8c8c8";
     const defaultOptionsChart = {
         layout: {
@@ -68,7 +71,6 @@ export const TradingViewComponent = ({ className }: Props) => {
         
     }
 
-
     useEffect(() => {
         //////////////////////////
         // Création du graphique 1
@@ -96,6 +98,8 @@ export const TradingViewComponent = ({ className }: Props) => {
         {
             chartType: ChartType.CANDLESTICK,
         });
+
+        chartInstance1.addLineSeries(jsonDataSma1, {color: "red", lineWidth: 1})
 
 
         const optionsChart2 = Utils.mergeDeep(defaultOptionsChart, {
@@ -129,7 +133,6 @@ export const TradingViewComponent = ({ className }: Props) => {
                 showLabels: true,
                 showMarkers: true,
             }
-            
         );
 
 
@@ -153,6 +156,12 @@ export const TradingViewComponent = ({ className }: Props) => {
             seriesOptions: {
                 color: '#f2d13a',
                 lineWidth: 2,
+                priceFormat: {
+                    type: 'custom',
+                    formatter: (price) => {
+                      return `${price.toFixed(2)}%`; // Format "prix avec deux décimales" et signe dollar
+                    },
+                },
             }
         }, {
             chartType: ChartType.STEPLINE,

@@ -20,18 +20,15 @@ import {
     PriceFormatCustom,
     BarPrice,
     CandlestickData,
-    CandlestickSeriesOptions} from "lightweight-charts";
+    CandlestickSeriesOptions,
+    LineSeriesPartialOptions} from "lightweight-charts";
 
 export type ChartConfig = {
     container: string | HTMLElement;
     chartOptions?: DeepPartial<ChartOptions>;
 };
 
-export type SeriesDataDefinition = 
-    AreaData<Time> | 
-    LineData<Time> | 
-    CandlestickData<Time> | 
-    WhitespaceData<Time>;
+
 
 export type SeriesDataCandle = {
     time: string;
@@ -79,13 +76,19 @@ export enum ChartType {
     STEPLINE = "STEPLINE",
 }
 
+export type SeriesDataDefinition = 
+    AreaData<Time> | 
+    LineData<Time> | 
+    CandlestickData<Time> | 
+    WhitespaceData<Time>;
+
 export class TradingViewPane {
     private seriesValue: SeriesConfig["seriesData"] = [];
     private chartElement: IChartApi | undefined = undefined;
     private seriesElement: ISeriesApi<
         "Area" | "Line" | "Candlestick",
         Time, 
-        SeriesDataDefinition | WhitespaceData<Time>, 
+        SeriesDataDefinition, 
         AreaSeriesOptions |  LineSeriesOptions | CandlestickSeriesOptions, 
         DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>
     > | undefined;
@@ -165,6 +168,14 @@ export class TradingViewPane {
         }          
     }
 
+
+    public addLineSeries = (
+        data: LineData<Time>[] | undefined, 
+        options?: LineSeriesPartialOptions
+    ) => {
+        const line = this.chart.addLineSeries(options);
+        data && line.setData(data);
+    }
 
 
     private createTitle = (container: ChartConfig["container"], title: string) => {
