@@ -1,5 +1,6 @@
 .chart {
   position: relative;
+  overflow: hidden;
 }
 .chart tr {
   position: relative;
