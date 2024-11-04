@@ -104,17 +104,16 @@ export const TradingViewComponent = ({ className }: Props) => {
             width: chartRef2.current.clientWidth,
             height: chartRef2.current.clientHeight || 300, // Définissez la hauteur désirée ici
         });
-
         const jsonData2WhiteSpaced = jsonData1.map((candle) => {
             const existingData = jsonData2.find((s) => s.time === candle.time);
-            return existingData || { time: candle.time, value: null } as WhitespaceData;
+            return existingData || { time: candle.time } as WhitespaceData;
         });
         const chartInstance2 = new TradingViewPane({
                 container: chartRef2.current,
                 chartOptions: optionsChart2,
             }, {
                 seriesTitle: "Total revenue",
-                seriesData: jsonData2,
+                seriesData: jsonData2WhiteSpaced,
                 seriesOptions: {
                     color: '#46a474',
                     lineWidth: 2,
@@ -142,14 +141,17 @@ export const TradingViewComponent = ({ className }: Props) => {
             timeScale: {
                 visible: true, // Affiche l'axe X
             },
-            
+        });
+        const jsonData3WhiteSpaced = jsonData1.map((candle) => {
+            const existingData = jsonData3.find((s) => s.time === candle.time);
+            return existingData || { time: candle.time } as WhitespaceData;
         });
         const chartInstance3 = new TradingViewPane({
             container: chartRef3.current,
             chartOptions: optionsChart3,
         }, {
             seriesTitle: "Net income",
-            seriesData: jsonData3,
+            seriesData: jsonData3WhiteSpaced,
             seriesOptions: {
                 color: '#f2d13a',
                 lineWidth: 2,

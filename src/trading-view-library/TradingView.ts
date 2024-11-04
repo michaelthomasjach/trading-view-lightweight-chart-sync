@@ -41,16 +41,7 @@ export class TradingView {
                 this.isSynchronizing = false;  // Libérer le verrou après la mise à jour
             }
         });
-
-    
-        
     };
-
-
-    private syncLabels = () => {
-    
-    }
-
 
     
     //////////////////////////
@@ -58,14 +49,27 @@ export class TradingView {
     // https://tradingview.github.io/lightweight-charts/tutorials/how_to/set-crosshair-position
     private syncCrosshair = (sourceChart: TradingViewPane, targetChart: TradingViewPane) => {
         sourceChart.chart.subscribeCrosshairMove((param) => {
+            console.log('param', param.logical)
             let dataPoint: {time: Time; value: number} | undefined = undefined; 
             param.seriesData.forEach((value, key) => {
                 dataPoint = {
                     time: value.time,
-                    value: (value as unknown as any).value 
+                    value: (value as unknown as any)?.value 
                 }
             });
-            
+                        
+            if (!dataPoint && param?.logical) {
+                // Récupérer la valeur la plus proche en termes de temps
+                const coordinate = targetChart.chart.timeScale().logicalToCoordinate(param.logical);
+
+                if (!coordinate) throw new Error("Unable to get coordinate with logical informations");
+                const time = sourceChart.chart.timeScale().coordinateToTime(coordinate);
+                console.log('time', time)
+                if (!time) throw new Error("Unable to get Time from coordinates");
+                targetChart.series && targetChart.chart.setCrosshairPosition(0, time, targetChart.series);
+                return;
+            }
+
             if (dataPoint) {
                 const {time, value} = dataPoint;
                 targetChart.series && targetChart.chart.setCrosshairPosition(value, time, targetChart.series);
@@ -74,4 +78,24 @@ export class TradingView {
             targetChart.chart.clearCrosshairPosition();
         });
     };
+
+
+    //////////////////////////
+    // Fonction pour récupérer la valeur la plus proche d'une série
+    private getClosestValue(seriesData: Array<{ time: Time; value: number }> | undefined, targetTime: Time): number | undefined {
+        if (!seriesData || seriesData.length === 0) return undefined;
+
+        let closestValue: number | undefined = undefined;
+        let smallestDifference = Number.MAX_SAFE_INTEGER;
+
+        seriesData.forEach((point) => {
+            const timeDifference = Math.abs((point.time as number) - (targetTime as number));
+            if (timeDifference < smallestDifference) {
+                smallestDifference = timeDifference;
+                closestValue = point.value;
+            }
+        });
+
+        return closestValue;
+    }
 }
