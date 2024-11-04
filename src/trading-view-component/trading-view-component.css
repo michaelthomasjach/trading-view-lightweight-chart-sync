@@ -1,9 +1,10 @@
+.chart-wrapper {
+  border: 4px solid #c8c8c8;
+  overflow: hidden;
+}
 .chart1 {
-  height: 40%;
+  height: 400px;
 }
-.chart2 {
-  height: 15%;
-}
-.chart3 {
-  height: 15%;
+.chart2, .chart3 {
+  height: 200px;
 }

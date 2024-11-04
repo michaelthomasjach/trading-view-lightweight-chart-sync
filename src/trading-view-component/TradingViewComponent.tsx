@@ -4,7 +4,7 @@ import jsonData1 from './serie1.json';
 import jsonData2 from './serie2.json';
 import jsonData3 from './serie3.json';
 import React, { useEffect, useRef, useState } from 'react';
-import {ColorType, createChart, LogicalRange, Time} from 'lightweight-charts';
+import {ColorType, createChart, LogicalRange, Time, WhitespaceData} from 'lightweight-charts';
 import { ChartType, TradingViewPane } from '../trading-view-library/TradingViewPane';
 import { TradingView } from '../trading-view-library/TradingView';
 import { Utils } from '../Utils';
@@ -60,6 +60,7 @@ export const TradingViewComponent = ({ className }: Props) => {
         rightPriceScale: {
             textColor: axisColor, // Couleur de la police de l'axe Y
             borderColor: 'rgba(0, 0, 0, 0)', // Masquer la bordure de l'axe Y à droite
+            minimumWidth: 65
         },
         leftPriceScale: {
             textColor: axisColor, // Couleur de la police de l'axe Y
@@ -86,18 +87,27 @@ export const TradingViewComponent = ({ className }: Props) => {
             container: chartRef1.current,
             chartOptions: optionsChart1,
         }, {
+            seriesTitle: "LOREAL",
             seriesData: jsonData1,
             seriesOptions: {
                 lineColor: '#2962FF',
                 topColor: '#2962FF',
                 bottomColor: 'rgba(41, 98, 255, 0.28)',
             }
+        },
+        {
+            chartType: ChartType.CANDLESTICK,
         });
 
 
         const optionsChart2 = Utils.mergeDeep(defaultOptionsChart, {
             width: chartRef2.current.clientWidth,
             height: chartRef2.current.clientHeight || 300, // Définissez la hauteur désirée ici
+        });
+
+        const jsonData2WhiteSpaced = jsonData1.map((candle) => {
+            const existingData = jsonData2.find((s) => s.time === candle.time);
+            return existingData || { time: candle.time, value: null } as WhitespaceData;
         });
         const chartInstance2 = new TradingViewPane({
                 container: chartRef2.current,
@@ -108,12 +118,19 @@ export const TradingViewComponent = ({ className }: Props) => {
                 seriesOptions: {
                     color: '#46a474',
                     lineWidth: 2,
-                }
+                    priceFormat: {
+                        type: 'custom',
+                        formatter: (price) => {
+                          return `$${price.toFixed(2)}B`; // Format "prix avec deux décimales" et signe dollar
+                        },
+                    },
+                },
+                
             },
             {
                 chartType: ChartType.STEPLINE,
                 showLabels: true,
-                showMarkers: true 
+                showMarkers: true,
             }
             
         );
@@ -125,6 +142,7 @@ export const TradingViewComponent = ({ className }: Props) => {
             timeScale: {
                 visible: true, // Affiche l'axe X
             },
+            
         });
         const chartInstance3 = new TradingViewPane({
             container: chartRef3.current,
@@ -158,9 +176,12 @@ export const TradingViewComponent = ({ className }: Props) => {
 
     return (
         <>
-            <div className="chart chart1" ref={chartRef1}></div>
-            <div className="chart chart2" ref={chartRef2}></div>
-            <div className="chart chart3" ref={chartRef3}></div>
+            <div className="chart-wrapper">
+                <div className="chart chart1" ref={chartRef1}></div>
+                <div className="chart chart2" ref={chartRef2}></div>
+                <div className="chart chart3" ref={chartRef3}></div>
+            </div>
+            
         </>          
     )
 };

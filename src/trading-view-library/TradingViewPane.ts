@@ -15,16 +15,29 @@ import {
     LineSeriesOptions,
     LineData,
     LineType,  
-    Coordinate} from "lightweight-charts";
+    Coordinate,
+    PriceFormat,
+    PriceFormatCustom,
+    BarPrice,
+    CandlestickData,
+    CandlestickSeriesOptions} from "lightweight-charts";
 
 export type ChartConfig = {
     container: string | HTMLElement;
     chartOptions?: DeepPartial<ChartOptions>;
 };
 
-export type SeriesDataPoint = {
+export type SeriesDataDefinition = 
+    AreaData<Time> | 
+    LineData<Time> | 
+    CandlestickData<Time> | 
+    WhitespaceData<Time>;
+
+export type SeriesDataCandle = {
     time: string;
-    value: number;
+    open: number;
+    high: number;
+    low: number;
 };
 
 export type Options = {
@@ -35,7 +48,7 @@ export type Options = {
 
 export type SeriesConfig = {
     seriesOptions?: DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>;
-    seriesData?: SeriesDataPoint[];
+    seriesData?: (SeriesDataDefinition)[];
     seriesTitle?: string;
     visibleRange?: LogicalRange
 };
@@ -44,7 +57,7 @@ export type ShowLabelsDefinition = {
     labelsContainer: HTMLDivElement;
     labels: {
         labelElement: HTMLElement
-        point: SeriesDataPoint
+        point: SeriesDataDefinition
     }[];
 };
 
@@ -52,7 +65,7 @@ export type ShowMarkersDefinition = {
     markersContainer: HTMLDivElement;
     markers: {
         markerElement: HTMLElement
-        point: SeriesDataPoint
+        point: SeriesDataDefinition
     }[];
 }
 
@@ -69,7 +82,13 @@ export enum ChartType {
 export class TradingViewPane {
     private seriesValue: SeriesConfig["seriesData"] = [];
     private chartElement: IChartApi | undefined = undefined;
-    private seriesElement: ISeriesApi<"Area" | "Line", Time, AreaData<Time> | LineData<Time> | WhitespaceData<Time>, AreaSeriesOptions | LineSeriesOptions, DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>> | undefined;
+    private seriesElement: ISeriesApi<
+        "Area" | "Line" | "Candlestick",
+        Time, 
+        SeriesDataDefinition | WhitespaceData<Time>, 
+        AreaSeriesOptions |  LineSeriesOptions | CandlestickSeriesOptions, 
+        DeepPartial<AreaStyleOptions & LineStyleOptions & SeriesOptionsCommon>
+    > | undefined;
     private labelsAppendDom: any[] = [];
     private paneId = crypto.getRandomValues(new Uint32Array(1))[0];
     private seriesConfig: SeriesConfig;
@@ -97,6 +116,7 @@ export class TradingViewPane {
 
         // STEP 2
         // Set the series to the chart
+        if (opts.chartType === ChartType.CANDLESTICK) this.seriesElement = this.chartElement.addCandlestickSeries();
         if (opts.chartType === ChartType.AREA) this.seriesElement = this.chartElement.addAreaSeries();
         if (opts.chartType === ChartType.LINE || 
             opts.chartType === ChartType.STEPLINE
@@ -142,9 +162,7 @@ export class TradingViewPane {
                 seriesConfig.seriesData
             );
             this.syncMarkers(markersContainer, markers);
-        }
-
-      
+        }          
     }
 
 
@@ -178,7 +196,7 @@ export class TradingViewPane {
         return labelElement;
     }
 
-    private createLabel = (point: SeriesDataPoint, timeCoordinate: Coordinate, coordinate: Coordinate) => {
+    private createLabel = (point: SeriesDataDefinition, timeCoordinate: Coordinate, coordinate: Coordinate) => {
         const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
 
         const labelElement = document.createElement('div');
@@ -205,8 +223,17 @@ export class TradingViewPane {
         -${width + 1}px 0px 0 #000,
         ${width + 1}px 0px 0 #000
     `;
-        
-        labelElement.innerHTML = `${point.value}`;
+        if (this.seriesConfig?.seriesOptions?.priceFormat) {
+            const priceFormat = this.seriesConfig?.seriesOptions?.priceFormat;
+            if (priceFormat && priceFormat?.type === 'custom' && 'formatter' in priceFormat) {
+                const { formatter } = priceFormat as PriceFormatCustom;
+                if (point && 'value' in point) labelElement.innerHTML = `${formatter(point.value as BarPrice)}`;
+                if (point && 'close' in point) labelElement.innerHTML = `${formatter(point.close as BarPrice)}`;
+            }
+        } else {
+            if (point && 'value' in point) labelElement.innerHTML = `${point.value}`;
+            if (point && 'close' in point) labelElement.innerHTML = `${point.close}`;
+        }
         labelElement.style.left = `${timeCoordinate}px`; // Centrer la valeur horizontalement
         labelElement.style.top = `${coordinate}px`; // Positionner au-dessus du point
         
@@ -221,9 +248,6 @@ export class TradingViewPane {
             });
         }  
         
-        this.chart?.subscribeClick(e => {
-            console.log("clic")
-        })
         
         this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
             const elementsArray = Array.from(document.getElementsByClassName(`chart-label-${this.paneId}`));
@@ -236,7 +260,11 @@ export class TradingViewPane {
             labels?.forEach((label) => {
                 if (!label?.labelElement || !label?.point) throw new Error("Point or LabelElement is not defined !");
                 const {point, labelElement} = label;
-                const coordinate = this.series!.priceToCoordinate(point.value);
+                
+                let coordinate: Coordinate | null = null;
+                if (point && 'value' in point) coordinate = this.series!.priceToCoordinate(point.value);
+                if (point && 'close' in point) coordinate = this.series!.priceToCoordinate(point.close);
+
                 const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
                 if (coordinate !== null && timeCoordinate !== null) {
@@ -283,7 +311,10 @@ export class TradingViewPane {
         const labels: ShowLabelsDefinition["labels"] = [];
         // Display initial position of labels
         values?.forEach((point) => {
-            const coordinate = this.series!.priceToCoordinate(point.value);
+            let coordinate: Coordinate | null = null;
+            if (point && 'value' in point) coordinate = this.series!.priceToCoordinate(point.value);
+            if (point && 'close' in point) coordinate = this.series!.priceToCoordinate(point.close);
+
             const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
             if (coordinate !== null && timeCoordinate !== null) {
@@ -332,7 +363,11 @@ export class TradingViewPane {
             markers?.forEach((marker) => {
                 if (!marker?.markerElement || !marker?.point) throw new Error("Point or MarkerElement is not defined !");
                 const {point, markerElement} = marker;
-                const coordinate = this.series!.priceToCoordinate(point.value);
+                
+                let coordinate: Coordinate | null = null;
+                if (point && 'value' in point) coordinate = this.series!.priceToCoordinate(point.value);
+                if (point && 'close' in point) coordinate = this.series!.priceToCoordinate(point.close);
+
                 const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
                 if (coordinate !== null && timeCoordinate !== null) {
@@ -379,7 +414,10 @@ export class TradingViewPane {
         const markers: ShowMarkersDefinition["markers"] = [];
         // Display initial position of labels
         values?.forEach((point) => {
-            const coordinate = this.series!.priceToCoordinate(point.value);
+            let coordinate: Coordinate | null = null;
+            if (point && 'value' in point) coordinate = this.series!.priceToCoordinate(point.value);
+            if (point && 'close' in point) coordinate = this.series!.priceToCoordinate(point.close);
+
             const timeCoordinate = this.chart!.timeScale().timeToCoordinate(point.time as any);
 
             if (coordinate !== null && timeCoordinate !== null) {
@@ -410,7 +448,7 @@ export class TradingViewPane {
         };
     }
 
-    private createMarker = (point: SeriesDataPoint, timeCoordinate: Coordinate, coordinate: Coordinate) => {
+    private createMarker = (point: SeriesDataDefinition, timeCoordinate: Coordinate, coordinate: Coordinate) => {
         const uniqueNumber = crypto.getRandomValues(new Uint32Array(1))[0];
 
         const markerElement = document.createElement('div');

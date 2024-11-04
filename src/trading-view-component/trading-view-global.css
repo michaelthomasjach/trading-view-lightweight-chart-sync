@@ -17,6 +17,14 @@
   z-index: 2;
 }
 
+.chart:last-child tr::before {
+  border-bottom: 1px solid #c8c8c8; /* Ajoute une bordure noire de 2px */
+}
+.chart:last-child tr:first-child::before {
+  /* border-bottom: 0px; /* Ajoute une bordure noire de 2px */
+}
+
+
 .chart-container .tv-lightweight-charts .price-axis {
   border: none !important; /* Supprime toute bordure */
 }
